@@ -1,31 +1,38 @@
-import { Cite } from "spectacle"
+import { Cite, Image } from "spectacle"
 import { DarkSlide, CodeSlide } from "./slides"
-import RegularComponent from "./regular-component"
+import perfectWorld from "../assets/perfect-world.jpg"
 
-# Spectacle MDX!
+# Web Scraping With
 
-**open the presentation/index.mdx file to get started**
+![floki](floki.svg)
 
----
+Will Ockelmann-Wagner
 
-export default DarkSlide
-
-export const transition = ["zoom"]
-
-# Write your Spectacle Presentations in Markdown
-
-## And seamlessly use React Components
-
-**How sweet is that**  
-**(super sweet)**
+wow@carbonfive.com | [github.com/will-wow](http://github.com/will-wow)
 
 ---
 
-![datboi](https://pbs.twimg.com/media/CkjFUyTXEAEysBY.jpg)
+![perfect-world](perfect-world.jpg)
+
+# In a perfect world...
 
 ---
 
-<RegularComponent />
+# All data would be in JSON
+
+```notes
+Anything you wanted to know would be avaialbe in an easy-to-parse format,
+ready for your programatic consumption.
+```
+
+---
+
+![real-world](real-world.jpg)
+# In the real world...
+
+---
+
+# Sometimes all you have is a website
 
 ---
 
@@ -59,15 +66,4 @@ Standard Text
 > Example Quote
 
 <Cite>Author</Cite>
-
----
-
-export default CodeSlide
-
-```javascript
-class SuperCoolComponent extends React.Component {
-  render() {
-    return <p>code slide works in markdown too whaaaaat</p>
-  }
-}
 ```

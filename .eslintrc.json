@@ -1,6 +1,9 @@
 {
-  "plugins": ["prettier"],
-  "extends": ["formidable/configurations/es6-react"],
+  "extends": [
+    "formidable/configurations/es6-react",
+    "prettier",
+    "prettier/react"
+  ],
 
   "rules": {
     "indent": [2, 2, { "SwitchCase": 1 }],

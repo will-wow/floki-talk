@@ -3,7 +3,7 @@ import createTheme from "../../createTheme"
 const colors = {
   primary: "white",
   secondary: "#1F2022", // almost black w/ blueish tint
-  tertiary: "#fc300f", // bright red
+  tertiary: "#EE4921", // bright red
   quaternary: "#CECECE" // pale gray
 }
 
