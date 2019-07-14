@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { getOptions } = require("loader-utils");
 const mdx = require("@mdx-js/mdx");
 const matter = require("gray-matter");
@@ -48,23 +49,21 @@ module.exports = async function (src) {
 
       transitions.push(transition);
 
-      return lines.filter((str) => !TRANSREG.test(str))
+      return lines
+        .filter((str) => !TRANSREG.test(str))
         .filter(Boolean)
         .join("\n");
     })
     .map((str) => {
       const lines = str.split("\n");
-      inlineModules.push(
-        ...lines.filter((str) => MODREG.test(str))
-      );
-      return lines.filter((str) => !MODREG.test(str))
+      inlineModules.push(...lines.filter((str) => MODREG.test(str)));
+      return lines
+        .filter((str) => !MODREG.test(str))
         .filter(Boolean)
         .join("\n");
     });
 
-  const {
-    modules = []
-  } = data;
+  const { modules = [] } = data;
 
   const code = `import React from 'react'
 import { MDXTag } from '@mdx-js/tag'

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import createSpectacleTheme from "spectacle/lib/themes/default";
 import merge from "deepmerge";
 
