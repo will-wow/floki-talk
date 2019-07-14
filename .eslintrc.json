@@ -1,4 +1,5 @@
 {
+  "plugins": ["prettier"],
   "extends": ["formidable/configurations/es6-react"],
 
   "rules": {
@@ -8,7 +9,8 @@
     "react/prefer-es6-class": 0,
     "react/no-multi-comp": 0,
     "react/prop-types": 0,
-    "no-shadow": 0
+    "no-shadow": 0,
+    "no-invalid-this": 0
   },
   "env": {
     "browser": true,

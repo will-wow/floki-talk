@@ -1,69 +1,69 @@
 /* eslint-disable */
-const { getOptions } = require("loader-utils");
-const mdx = require("@mdx-js/mdx");
-const matter = require("gray-matter");
-const stringifyObject = require("stringify-object");
-const normalizeNewline = require("normalize-newline");
+const { getOptions } = require("loader-utils")
+const mdx = require("@mdx-js/mdx")
+const matter = require("gray-matter")
+const stringifyObject = require("stringify-object")
+const normalizeNewline = require("normalize-newline")
 
-const EXREG = /export\sdefault\s\(/g;
-const MODREG = /^(import|export)\s/;
-const SLIDEREG = /\n---\n/;
-const TRANSREG = /^export const transition.*\s(.*)/;
-const hasDefaultExport = (str) => (/export default/).test(str);
+const EXREG = /export\sdefault\s\(/g
+const MODREG = /^(import|export)\s/
+const SLIDEREG = /\n---\n/
+const TRANSREG = /^export const transition.*\s(.*)/
+const hasDefaultExport = str => /export default/.test(str)
 
-const defaultLayout = (str) => {
+const defaultLayout = str => {
   if (!hasDefaultExport(str)) {
     str = `import {DefaultSlide} from './slides'
 
 export default DefaultSlide
 
-${str}`;
+${str}`
   }
-  return str;
-};
+  return str
+}
 
-module.exports = async function (src) {
-  const callback = this.async();
-  const options = getOptions(this) || {};
+module.exports = async function(src) {
+  const callback = this.async()
+  const options = getOptions(this) || {}
 
-  const { data, content } = matter(src);
+  const { data, content } = matter(src)
 
-  const transitions = [];
+  const transitions = []
 
-  const inlineModules = [];
+  const inlineModules = []
   const slides = normalizeNewline(content)
     .split(SLIDEREG)
-    .map((str) => defaultLayout(str))
-    .map((str) => mdx.sync(str, options))
-    .map((str) => str.trim())
-    .map((str) => str.replace(EXREG, "("))
-    .map((str) => {
-      const lines = str.split("\n");
-      let transition = null;
-      lines.forEach((line) => {
-        const match = line.match(TRANSREG);
+    .map(str => defaultLayout(str))
+    .map(str => mdx.sync(str, options))
+    .map(str => str.trim())
+    .map(str => str.replace(EXREG, "("))
+    .map(str => {
+      const lines = str.split("\n")
+      let transition = null
+      lines.forEach(line => {
+        const match = line.match(TRANSREG)
         if (match && match[1]) {
-          transition = match[1];
+          transition = match[1]
         }
-      });
+      })
 
-      transitions.push(transition);
+      transitions.push(transition)
 
       return lines
-        .filter((str) => !TRANSREG.test(str))
+        .filter(str => !TRANSREG.test(str))
         .filter(Boolean)
-        .join("\n");
+        .join("\n")
     })
-    .map((str) => {
-      const lines = str.split("\n");
-      inlineModules.push(...lines.filter((str) => MODREG.test(str)));
+    .map(str => {
+      const lines = str.split("\n")
+      inlineModules.push(...lines.filter(str => MODREG.test(str)))
       return lines
-        .filter((str) => !MODREG.test(str))
+        .filter(str => !MODREG.test(str))
         .filter(Boolean)
-        .join("\n");
-    });
+        .join("\n")
+    })
 
-  const { modules = [] } = data;
+  const { modules = [] } = data
 
   const code = `import React from 'react'
 import { MDXTag } from '@mdx-js/tag'
@@ -76,7 +76,7 @@ export const transitions = [
 
 export default [
   ${slides.join(",\n\n")}
-]`;
+]`
 
-  return callback(null, code);
-};
+  return callback(null, code)
+}
