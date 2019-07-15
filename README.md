@@ -1,6 +1,4 @@
-[![Maintenance Status][maintenance-image]](#maintenance-status)
-
-# Spectacle Boilerplate
+# Floki Talk
 
 ## Contents
 
@@ -28,30 +26,10 @@ After downloading the boilerplate, your first order of business is to open a ter
 yarn
 ```
 
-or
-
-```bash
-npm install
-```
-
-Next, run
-
-```bash
-rm -R .git
-```
-
-to remove the existing version control.
-
 Then, to start up the local server, run
 
 ```bash
 yarn start
-```
-
-or
-
-```bash
-npm start
 ```
 
 Open a browser and hit [http://localhost:3000](http://localhost:3000), and you're ready to roll. Modify `index.mdx` to see changes, but the best part about MDX is that you can create your own React components and import them into the `index.mdx` file to seamlessly integrate with markdown!
@@ -61,17 +39,11 @@ Open a browser and hit [http://localhost:3000](http://localhost:3000), and you'r
 Building the dist version of the project is as easy as running
 
 ```bash
-npm run build
+yarn build
 ```
 
 If you want to deploy the slideshow to surge, run
 
 ```bash
-npm run deploy
+yarn deploy
 ```
-
-## Maintenance Status: Active
-
-Formidable is actively working on this project, and we expect to continue for work for the foreseeable future. Bug reports, feature requests and pull requests are welcome.
-
-[maintenance-image]: https://img.shields.io/badge/maintenance-active-green.svg
