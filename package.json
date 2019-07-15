@@ -5,13 +5,15 @@
   "license": "MIT",
   "devDependencies": {
     "mdx-deck": "^2.5.0",
+    "ncp": "^2.0.0",
     "prettier": "^1.18.2",
     "surge": "latest"
   },
   "scripts": {
     "start": "mdx-deck src/deck.mdx",
-    "build": "mdx-deck build src/deck.mdx",
-    "deploy": "npm run clean & npm run build && surge -p build",
+    "build": "mdx-deck build src/deck.mdx && npm run copy",
+    "copy": "ncp ./src/assets ./dist/assets",
+    "deploy": "surge -p dist --domain https://floki-talk.surge.sh",
     "format": "prettier --write \"**/*.{js,json,md,mdx}\""
   }
 }
