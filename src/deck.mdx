@@ -1,4 +1,5 @@
-import { aspect } from "@mdx-deck/themes";
+export { syntaxHighlighterPrism as theme } from "@mdx-deck/themes";
+
 import { Notes, Image } from "mdx-deck";
 import { Split } from "mdx-deck/layouts";
 import BgImage from "./components/BgImage";
@@ -89,13 +90,18 @@ DDOS any sites
 
 ---
 
-# Basically don't make these more common
+<Split>
 
-## CAPTCA
+# Basically don't make me do more of these
+
+![captcha](assets/captcha.png)
+
+</Split>
 
 <Notes>
 
-Because I'm really tired of saying what is and isn't a traffic sign.
+Basically dont' make me do more of these
+Does the little sliver of sign count? No one knows.
 
 </Notes>
 
@@ -131,3 +137,57 @@ The sweet spot for Floki is when you're gathering data, and gathering links that
 If you need to update something, you can always make a form POST with HTTPoison.
 
 </Notes>
+
+---
+
+# Floki Data Structure
+
+```elixir
+Floki.parse(~s(
+  <div id="main"><strong className="bold">Hello</strong> World</div>
+))
+
+{"div", [{"id", "main"}],
+ [{"strong", [{"classname", "bold"}], ["Hello"]}, " World"]}
+```
+
+---
+
+# Floki Querying and Parsing
+
+```elixir
+[friend_path | _] =
+  html
+  |> Floki.find(".friend")
+  |> List.first()
+  |> Floki.find("a.profile-link")
+  |> Floki.attribute("href")
+```
+
+<Notes>
+
+Pipelines
+
+</Notes>
+
+---
+
+<Split>
+
+# Example Project: Actor Best Friends
+
+![patrick-steward-ian-mckellen](assets/best-friends.jpg)
+
+</Split>
+
+---
+
+# ExMDB
+
+- Scrape IMDB
+- Find an actor
+- Find some movies they've been in
+- Find who else has been in those movies
+- Count up the co-stars
+- ???
+- Profit
