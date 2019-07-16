@@ -4,10 +4,11 @@ const BestFriendFinder = () => {
   const [actor, setActor] = useState("Chris Evans");
   const [movieCount, setMovieCount] = useState(4);
   const [friends, setFriends] = useState([]);
+  const [error, setError] = useState(null);
 
   const handleActorChange = event => setActor(event.target.value);
   const handleCountChange = event => {
-    const value = parseInt(event.target.value || "0");
+    const value = event.target.value ? parseInt(event.target.value) : "";
     setMovieCount(value);
   };
 
@@ -15,12 +16,19 @@ const BestFriendFinder = () => {
     event.preventDefault();
     if (!actor || !movieCount) return;
 
-    const response = await fetch(
-      `http://localhost:4000/api/best_friends?actor=${actor}&movie_count=${movieCount}`
-    );
+    setFriends([]);
+    setError(null);
 
-    const { friends } = await response.json();
-    setFriends(friends);
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/best_friends?actor=${actor}&movie_count=${movieCount}`
+      );
+
+      const { friends } = await response.json();
+      setFriends(friends);
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
@@ -42,6 +50,8 @@ const BestFriendFinder = () => {
         <button type="submit" style={{ fontSize: "0.5em" }}>
           Submit
         </button>
+
+        {error && <div style={{ color: "red" }}>{error}</div>}
 
         {friends.map(({ actor, count }) => (
           <div key={actor}>

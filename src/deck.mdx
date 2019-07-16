@@ -189,7 +189,8 @@ Pipelines
 
 So today we're going to be scraping some data from IMDB
 IMDB, suprisingly, doesn't have a public API
-You can hit up OMDB - the Open Movie Database, which gets its data from... scraping IMDB
+So if you want to look up Nic Cage's best movies, well it's National Treasure, but
+You can hit up OMDB - the Open Movie Database, which gets its data from... scraping IMDB with a spider
 
 </Notes>
 
@@ -208,6 +209,16 @@ You can hit up OMDB - the Open Movie Database, which gets its data from... scrap
 ![patrick-steward-ian-mckellen](assets/best-friends.jpg)
 
 </Split>
+
+<Notes>
+
+We're going to do something similar
+ExMDB, the Elixir Movie Database
+Specifically going to try to answer a question about finding an actor's best friend
+Which is to say, in their recent movies, who have they costarred with most frequently.
+Mildly interesting question.
+
+</Notes>
 
 ---
 
@@ -260,6 +271,8 @@ end
 ```
 
 <Notes>
+
+Use not floki but something else like HTTPoison to fetch the page
 
 This is the pattern these scraper functions will genererally follow:
 
@@ -330,6 +343,17 @@ So I'd like to filter those out.
 
 </Split>
 
+<Notes>
+
+Floki doesn't run js, because its not a headless browser
+It just takes exactly what the html route returned, and parses it
+So if you turn off js, you'll see exactly what Floki will see
+For IMDB it's about the same except dropdowns don't work
+For Google though, the classes are totally different and not human-readable,
+which makes it very hard to scrape. I wonder if that's on purpose.
+
+</Notes>
+
 ---
 
 # Parsing Movie Links (1)
@@ -347,6 +371,8 @@ def find_actor_movies(actor_page, movie_count) do
 
 <Notes>
 
+How do we go about parsing
+He're the first part
 Find those movie rows, and filter out the ones that are in production
 
 </Notes>
@@ -381,50 +407,158 @@ end
 
 <Notes>
 
-Hopefully this works!
-Here we can put in a name, and a number of movies, and it'll do the scraping
-and give us back most frequent co-stars.
+Hopefully this works! I'm using mdx-deck for the first time, so we'll see.
+Here we can put in a name, and a number of movies
+For Chris Evans (Cap) we won't need a lot of movies, because he's been focused lately
+
+When i hit submit it'll do the scraping and give us back most frequent co-stars.
+It should take a few seconds.
 
 </Notes>
 
 ---
 
-
 # Checks out
 
 ![cap-iron-man](assets/cap-iron-man.jpg)
 
+<Notes>
+
+As you might expect, Chris Evans and Robert Downy Jr. do a lot of movies together.
+
+</Notes>
+
 ---
 
-# Async
+# Moar Data
+
+## For Seth Rogan, the last 20 movies, any guesses?
+
+---
+
+# Seth Rogan
+
+```elixir
+[
+  {"James Franco", 4},
+  {"Zac Efron", 3},
+  {"Billy Eichner", 2},
+  {"Nathan Fielder", 2},
+  {"David Cross", 2},
+  {"Lucy Liu", 2},
+  ...
+]
+```
+
+<Notes>
+
+James Franco, those guys do like making movies together.
+But he hasn't working with him in a few movies, I had to scrape 20
+pages to get interesting results.
+That took a long time
+
+</Notes>
+
+---
+
+# 26 seconds is a long time
 
 ```bash
-➜  exmdb (master) ✗ time mix best_friends "Seth Rogen" 20 async
-[
-  {"James Franco", 4},
-  {"Zac Efron", 3},
-  {"Billy Eichner", 2},
-  {"Nathan Fielder", 2},
-  {"David Cross", 2},
-  {"Lucy Liu", 2},
-  {"Dave Franco", 2},
-  {"Nick Kroll", 2},
-  {"Randall Duk Kim", 2},
-  {"Jack Black", 2}
-]
-mix best_friends "Seth Rogen" 20 async  4.50s user 0.69s system 62% cpu 8.348 total
-➜  exmdb (master) ✗ time mix best_friends "Seth Rogen" 20
-[
-  {"James Franco", 4},
-  {"Zac Efron", 3},
-  {"Billy Eichner", 2},
-  {"Nathan Fielder", 2},
-  {"David Cross", 2},
-  {"Lucy Liu", 2},
-  {"Dave Franco", 2},
-  {"Nick Kroll", 2},
-  {"Randall Duk Kim", 2},
-  {"Jack Black", 2}
-]
-mix best_friends "Seth Rogen" 20  3.81s user 0.55s system 16% cpu 25.886 total
+time mix best_friends "Seth Rogen" 20
+> 3.81s user 0.55s system 16% cpu 25.886 total
 ```
+
+<Notes>
+
+I wrote a little mix script to automate this, and used time to time it
+On my laptop, pretty fast internet, almost 26 seconds
+If you were gathering a bunch of data, that would get old fast.
+
+</Notes>
+
+---
+
+# Syncronous Api Calls are Slow
+
+```elixir
+name
+|> Scraper.fetch_actor_path()
+|> Scraper.fetch_actor_movies(movie_count)
+# Too slow
+|> Enum.flat_map(&Scraper.fetch_movie_actor_names/1)
+|> aggregate_friends(name)
+```
+
+<Notes>
+
+The problem is right there - I'm getting a list of movie page urls,
+and mapping over them - one at a time, no concurrency.
+
+In another language this could be annoying. In Elixir, making requests
+in parallel is what it's all about
+
+</Notes>
+
+---
+
+# async_stream to the rescue
+
+```elixir
+name
+|> Scraper.fetch_actor_path()
+|> Scraper.fetch_actor_movies(movie_count)
+# So fast
+|> Task.async_stream(fn movie_path -> 
+  Scraper.fetch_movie_actor_names(movie_path)
+end)
+|> Enum.flat_map(fn {:ok, names} -> names end)
+|> aggregate_friends(name)
+```
+
+<Notes>
+
+I just changed this ever so slightly, using an async_stream to do every 
+request concurrently in its own process
+
+Other than that, all the other logic stays exacty the same
+
+</Notes>
+
+---
+
+# Before
+
+```bash
+3.81s user 0.55s system 16% cpu 25.886 total
+```
+
+
+# After
+
+```bash
+4.50s user 0.69s system 62% cpu 8.348 total
+```
+
+<Notes>
+
+Just that one change, over 20 requests, gets me a 3x improvement.
+If you were doing enough requests, like crawling all of IMDB, you'd
+need to do some work to make sure you're only making so many requests
+and a time, and recover your place if it crashed, but Erlang still 
+makes all that very doable.
+
+</Notes>
+
+---
+
+# What did we learn
+
+- Floki parsing is easy to follow, easy to test
+- Elixir makes parallel scraping easy
+- Try disabling JS in your browser during development
+- Be nice to the websites you're scraping
+- Seth Rogen ❤️ James Franco
+
+---
+
+# Thanks!
