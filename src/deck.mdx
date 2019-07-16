@@ -1,8 +1,9 @@
 export { syntaxHighlighterPrism as theme } from "@mdx-deck/themes";
 
 import { Notes, Image } from "mdx-deck";
-import { Split } from "mdx-deck/layouts";
+import { Split, FullScreenCode } from "mdx-deck/layouts";
 import BgImage from "./components/BgImage";
+import BestFriendFinder from "./components/BestFriendFinder";
 
 # Web Scraping With
 
@@ -174,7 +175,35 @@ Pipelines
 
 <Split>
 
-# Example Project: Actor Best Friends
+<div>
+
+# Example Scraping Target: IMDB
+
+</div>
+
+![nic-cage](assets/nic-cage.png)
+
+</Split>
+
+<Notes>
+
+So today we're going to be scraping some data from IMDB
+IMDB, suprisingly, doesn't have a public API
+You can hit up OMDB - the Open Movie Database, which gets its data from... scraping IMDB
+
+</Notes>
+
+---
+
+<Split>
+
+<div>
+
+# ExMDB
+
+## Finding Actor Best Friends
+
+</div>
 
 ![patrick-steward-ian-mckellen](assets/best-friends.jpg)
 
@@ -185,9 +214,217 @@ Pipelines
 # ExMDB
 
 - Scrape IMDB
-- Find an actor
+- Find an actor by name
 - Find some movies they've been in
 - Find who else has been in those movies
 - Count up the co-stars
 - ???
 - Profit
+
+---
+
+# Here's that in code
+
+```elixir
+def find_best_friends(name, movie_count) do
+  name
+  |> Scraper.fetch_actor_path()
+  |> Scraper.fetch_actor_movies(movie_count)
+  |> Enum.flat_map(&Scraper.fetch_movie_actor_names/1)
+  |> aggregate_friends(name)
+end
+```
+
+<Notes>
+
+Here's how that looks in code. Because Elixir, it's pretty much the same as it is in english
+
+</Notes>
+
+---
+
+# Fetching and parsing
+
+```elixir
+def fetch_actor_path(actor_name) do
+  "/find"
+  |> fetch_page(q: actor_name, exact: true, s: "nm")
+  |> Parser.find_actor_path()
+end
+
+def fetch_page(path, params \\ []) do
+  "https://www.imdb.com#{path}"
+  |> HTTPoison.get!([], params: params)
+  |> Map.get(:body)
+end
+```
+
+<Notes>
+
+This is the pattern these scraper functions will genererally follow:
+
+- use HTTPoison to GET a webpage
+- get the body (just an HTML string)
+- pass the body to a function that does Floki Parsing
+
+</Notes>
+
+---
+
+# Why Seperate Parsers?
+
+- Seperation of concerns
+- Fetch once, parse twice
+- Testing
+
+---
+
+# Seperate Parsers: Testing
+
+```elixir
+test "find_movie_actor_names" do
+  html = File.read!("test/exmdb/movie.html")
+
+  assert Parser.find_movie_actor_names(html) == ["Robert Downey Jr."]
+end
+```
+
+<Notes>
+
+Because parsers just operate on HTML strings and Floki data structures,
+parsers are just pure functions, and pure functions are easy to test.
+
+You can also test your fetcher logic, but then you have to deal with dependency injection,
+or using Mox, or something like that. So splitting up those two things makes sense.
+
+</Notes>
+
+---
+
+<Split>
+
+# An Artist Page
+
+![cap-filmography](assets/cap-filmography.png)
+
+</Split>
+
+<Notes>
+  
+So here's what the filmography section of an actor's page looks like
+Each row in this table is a movie they're in, and the second cell has a link to the movie
+page
+which is what I want so I can see who was in that movie.
+But, the ones with red text are still in production and often don't have the whole cast listed.
+So I'd like to filter those out.
+
+</Notes>
+
+---
+
+<Split>
+
+# Pro-Tip: Disable JavaScript
+
+![disable-js](assets/disable-js.png)
+
+</Split>
+
+---
+
+# Parsing Movie Links (1)
+
+```elixir
+def find_actor_movies(actor_page, movie_count) do
+  actor_page
+  |> Floki.find(".filmo-category-section .filmo-row")
+  |> Enum.filter(fn row ->
+    # Filter out movies that may not
+    # have a full cast list.
+    Floki.find(row, ".in_production") == []
+  end)
+```
+
+<Notes>
+
+Find those movie rows, and filter out the ones that are in production
+
+</Notes>
+
+---
+
+# Parsing Movie Links (2)
+
+```elixir
+  movie_rows
+  |> Enum.take(movie_count)
+  |> Enum.map(fn row ->
+    row
+    |> Floki.find("a")
+    |> Floki.attribute("href")
+    |> List.first()
+  end)
+end
+```
+
+<Notes>
+
+- Then get just first few rows - I'm not trying to crawl all of IMDB here
+- Finally for each row, get the first link in the row
+- Gives us a list of links to follow to get the actors in all those movies
+
+</Notes>
+
+---
+
+<BestFriendFinder />
+
+<Notes>
+
+Hopefully this works!
+Here we can put in a name, and a number of movies, and it'll do the scraping
+and give us back most frequent co-stars.
+
+</Notes>
+
+---
+
+
+# Checks out
+
+![cap-iron-man](assets/cap-iron-man.jpg)
+
+---
+
+# Async
+
+```bash
+➜  exmdb (master) ✗ time mix best_friends "Seth Rogen" 20 async
+[
+  {"James Franco", 4},
+  {"Zac Efron", 3},
+  {"Billy Eichner", 2},
+  {"Nathan Fielder", 2},
+  {"David Cross", 2},
+  {"Lucy Liu", 2},
+  {"Dave Franco", 2},
+  {"Nick Kroll", 2},
+  {"Randall Duk Kim", 2},
+  {"Jack Black", 2}
+]
+mix best_friends "Seth Rogen" 20 async  4.50s user 0.69s system 62% cpu 8.348 total
+➜  exmdb (master) ✗ time mix best_friends "Seth Rogen" 20
+[
+  {"James Franco", 4},
+  {"Zac Efron", 3},
+  {"Billy Eichner", 2},
+  {"Nathan Fielder", 2},
+  {"David Cross", 2},
+  {"Lucy Liu", 2},
+  {"Dave Franco", 2},
+  {"Nick Kroll", 2},
+  {"Randall Duk Kim", 2},
+  {"Jack Black", 2}
+]
+mix best_friends "Seth Rogen" 20  3.81s user 0.55s system 16% cpu 25.886 total
+```
