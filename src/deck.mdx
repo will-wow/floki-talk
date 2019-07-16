@@ -508,7 +508,7 @@ name
 |> Scraper.fetch_actor_path()
 |> Scraper.fetch_actor_movies(movie_count)
 # So fast
-|> Task.async_stream(fn movie_path -> 
+|> Task.async_stream(fn movie_path ->
   Scraper.fetch_movie_actor_names(movie_path)
 end)
 |> Enum.flat_map(fn {:ok, names} -> names end)
@@ -517,7 +517,7 @@ end)
 
 <Notes>
 
-I just changed this ever so slightly, using an async_stream to do every 
+I just changed this ever so slightly, using an async_stream to do every
 request concurrently in its own process
 
 Other than that, all the other logic stays exacty the same
@@ -532,7 +532,6 @@ Other than that, all the other logic stays exacty the same
 3.81s user 0.55s system 16% cpu 25.886 total
 ```
 
-
 # After
 
 ```bash
@@ -544,7 +543,7 @@ Other than that, all the other logic stays exacty the same
 Just that one change, over 20 requests, gets me a 3x improvement.
 If you were doing enough requests, like crawling all of IMDB, you'd
 need to do some work to make sure you're only making so many requests
-and a time, and recover your place if it crashed, but Erlang still 
+and a time, and recover your place if it crashed, but Erlang still
 makes all that very doable.
 
 </Notes>
