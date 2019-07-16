@@ -1,6 +1,10 @@
 # Floki Talk
 
-A talk about web scraping with Floki, an HTML parser for Elixir
+A talk for [Elixir LA](https://www.meetup.com/Elixir-LA/events/pqcwlpyzkbwb/) about web scraping with Floki, an HTML parser for Elixir
+
+Deck: [floki-talk.surge.sh](https://floki-talk.surge.sh)
+
+Related Elixir Repo: [ExMDB](https://github.com/will-wow/exmdb)
 
 ## MDX-Deck
 
