@@ -12,23 +12,19 @@ const BestFriendFinder = () => {
     setMovieCount(value);
   };
 
-  const handleSubmit = async event => {
+  const handleSubmit = event => {
     event.preventDefault();
     if (!actor || !movieCount) return;
 
     setFriends([]);
     setError(null);
 
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/best_friends?actor=${actor}&movie_count=${movieCount}`
-      );
-
-      const { friends } = await response.json();
-      setFriends(friends);
-    } catch (e) {
-      setError(e.message);
-    }
+    return fetch(
+      `http://localhost:4000/api/best_friends?actor=${actor}&movie_count=${movieCount}`
+    )
+      .then(response => response.json())
+      .then(({ friends }) => setFriends(friends))
+      .catch(e => setError(e.message));
   };
 
   return (
